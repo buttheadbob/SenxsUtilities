@@ -13,9 +13,14 @@ namespace S_Utilities.Utils
         public static async void ProcessLogEvent(LogEventInfo logEvent)
         {
             if (Config is null) return;
+            if (!Config.MasterSwitch) return;
+            if (!Config.Log2Discord) return;
             
             foreach (LogHandler logHandler in Config.LogHandlers)
             {
+                if (logHandler.OnlyWhenServerOnline && !Senxs_Utilities.IsOnline)
+                    continue;
+                
                 if (logHandler.LogNames.Count > 0 && !logHandler.LogNames.Contains(logEvent.LoggerName))
                     continue;
                 
@@ -25,28 +30,43 @@ namespace S_Utilities.Utils
                 if (logEvent.Level.Ordinal < logHandler.MinLogLevel || logEvent.Level.Ordinal > logHandler.MaxLogLevel)
                     continue;
 
-                using DiscordWebhookClient client = new DiscordWebhookClient(logHandler.DiscordWebHook);
+                using DiscordWebhookClient client = new (logHandler.DiscordWebHook);
                 
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new ();
                 sb.AppendLine($"**{logEvent.Level.Name}**");
+                sb.AppendLine();
                 sb.AppendLine($"**Logger:** {logEvent.LoggerName}");
                 sb.AppendLine($"**Message:** {logEvent.Message}");
-                sb.AppendLine($"**Exception:** {logEvent.Exception?.Message}");
+                
+                if (!string.IsNullOrWhiteSpace(logEvent.Exception?.Message))
+                    sb.AppendLine($"**Exception:** {logEvent.Exception?.Message}");
                 
                 if (logEvent.HasStackTrace)
                     sb.AppendLine($"**Stack Trace:** {logEvent.Exception?.StackTrace}");
 
-                EmbedBuilder embed = new EmbedBuilder()
+                sb.AppendLine(logHandler.CreateRolePingText());
+                sb.AppendLine(logHandler.CreateMemberPingText());
+
+                EmbedBuilder embed = new ()
                 {
-                    Title = "Log Event",
-                    Description = sb.ToString()
+                    Description = sb.ToString(), Color = logEvent.Level.Name switch
+                    {
+                        "Fatal" => Color.DarkRed,
+                        "Error" => Color.Red,
+                        "Warn" => Color.Gold,
+                        "Info" => Color.Green,
+                        "Debug" => Color.LightGrey,
+                        _ => Color.Default
+                    }
                 };
 
-                AllowedMentions allowedMentions = new AllowedMentions
+                AllowedMentions allowedMentions = new ()
                 {
-                    RoleIds = logHandler.RolesToPing
+                    RoleIds = logHandler.RolesToPing,
+                    UserIds = logHandler.MembersToPing
                 };
-                await client.SendMessageAsync(text:"NEW TORCH LOG EVENT", embeds: new[] { embed.Build() }, allowedMentions: allowedMentions);
+                
+                await client.SendMessageAsync(text: Senxs_Utilities.InstName, embeds: new[] { embed.Build() }, allowedMentions: allowedMentions);
             }
         }
     }

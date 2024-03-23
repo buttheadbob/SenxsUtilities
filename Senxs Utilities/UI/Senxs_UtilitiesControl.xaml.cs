@@ -1,10 +1,9 @@
-﻿using System.Windows.Controls;
-using S_Utilities.Settings;
+﻿using S_Utilities.Settings;
 using Senxs_Utilities.UI;
 
 namespace S_Utilities.UI
 {
-    public partial class SenX_UI : UserControl
+    public partial class SenX_UI
     {
         private readonly Senxs_Utilities Plugin;
         private static S_Config? Config => Senxs_Utilities.Config;
@@ -13,7 +12,7 @@ namespace S_Utilities.UI
         {
             InitializeComponent();
             Plugin = plugin;
-            Log2Discord_Settings discordSettings = new Log2Discord_Settings(Config, SaveRequested);
+            Log2Discord_Settings discordSettings = new (Config, SaveRequested);
             // EjectorSettings ejectorSettings = new EjectorSettings(Plugin.Config, SaveRequested);  --- NOT IMPLEMENTED YET
             DataContext = Config;
             DiscordSettingsTab.Content = discordSettings;

@@ -14,7 +14,7 @@
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
@@ -210,7 +210,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Senxs Utilities\Senxs_Utilities.cs" />
-    <Compile Include="Senxs Utilities\Settings\DiscordConfig.cs" />
+    <Compile Include="Senxs Utilities\Settings\Log2Discord_Config.cs" />
     <Compile Include="Senxs Utilities\Settings\Senxs_UtilitiesConfig.cs" />
     <Compile Include="Senxs Utilities\UI\Log2Discord_AddEditHandler.xaml.cs">
       <DependentUpon>Log2Discord_AddEditHandler.xaml</DependentUpon>
@@ -240,13 +240,17 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include=".gitignore" />
+    <Resource Include="Senxs Utilities\Media\Delete.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Setup (run before opening plugin).bat" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Content Include="manifest.xml" CopyToOutputDirectory="PreserveNewest" />
-    <Resource Include="Senxs Utilities\Media\Delete.png" />
-    <Resource Include="Senxs Utilities\Media\Edit.png" />
+    <Resource Include="Senxs Utilities\Media\Edit.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <Page Include="Senxs Utilities\UI\Log2Discord_AddEditHandler.xaml" />

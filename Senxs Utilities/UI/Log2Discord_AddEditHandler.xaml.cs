@@ -22,8 +22,10 @@ namespace Senxs_Utilities.UI
                 MinLogLevelBox.Text = editHandler.MinLogLevel.ToString();
                 MaxLogLevelBox.Text = editHandler.MaxLogLevel.ToString();
                 Roles2PingBox.Text = string.Join(",", editHandler.RolesToPing);
+                Members2PingBox.Text = string.Join(",", editHandler.MembersToPing);
                 LogNamesBox.Text = string.Join(",", editHandler.LogNames);
                 LogNames_IgnoreBox.Text = string.Join(",", editHandler.LogNames_Ignore);
+                OnlyWhenOnlineBox.IsChecked = editHandler.OnlyWhenServerOnline;
             }
         }
 
@@ -48,9 +50,21 @@ namespace Senxs_Utilities.UI
                 return;
             }
             
+            if (minLogLevel is < 0 or > 5)
+            {
+                MessageBox.Show("Min Log Level must be between 0 and 5.", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            
             if (!int.TryParse(MaxLogLevelBox.Text, out int maxLogLevel))
             {
                 MessageBox.Show("Max Log Level must be a number.", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            
+            if (maxLogLevel is < 0 or > 5)
+            {
+                MessageBox.Show("Max Log Level must be between 0 and 5.", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             
@@ -60,7 +74,7 @@ namespace Senxs_Utilities.UI
                 return;
             }
             
-            List<ulong> rolesToPing = new List<ulong>();
+            List<ulong> rolesToPing = new ();
             if (!string.IsNullOrEmpty(Roles2PingBox.Text))
             {
                 string[] roleIds = Roles2PingBox.Text.Split(',');
@@ -78,8 +92,27 @@ namespace Senxs_Utilities.UI
                     }
                 }
             }
+
+            List<ulong> membersToPing = new ();
+            if (!string.IsNullOrEmpty(Members2PingBox.Text))
+            {
+                string[] memberIds = Members2PingBox.Text.Split(',');
+                foreach (string memberId in memberIds)
+                {
+                    if (ulong.TryParse(memberId, out ulong id))
+                    {
+                        membersToPing.Add(id);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Member ID must be a number.  You can ping multiple members by separating them with commas... \r\n" +
+                            "The Member ID that caused the failure: " + memberId, "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
+            }
             
-            List<string> logNames = new List<string>();
+            List<string> logNames = new ();
             if (!string.IsNullOrEmpty(LogNamesBox.Text))
             {
                 string[] names = LogNamesBox.Text.Split(',');
@@ -89,7 +122,7 @@ namespace Senxs_Utilities.UI
                 }
             }
             
-            List<string> logNamesIgnore = new List<string>();
+            List<string> logNamesIgnore = new ();
             if (!string.IsNullOrEmpty(LogNames_IgnoreBox.Text))
             {
                 string[] names = LogNames_IgnoreBox.Text.Split(',');
@@ -100,15 +133,17 @@ namespace Senxs_Utilities.UI
             }
             
             // Save the handler
-            LogHandler log2discordHandler = new LogHandler
+            LogHandler log2discordHandler = new ()
             {
                 Name = NameBox.Text,
                 MinLogLevel = minLogLevel,
                 MaxLogLevel = maxLogLevel,
                 DiscordWebHook = WebhookBox.Text,
                 RolesToPing = rolesToPing,
+                MembersToPing = membersToPing,
                 LogNames = logNames,
-                LogNames_Ignore = logNamesIgnore
+                LogNames_Ignore = logNamesIgnore,
+                OnlyWhenServerOnline = OnlyWhenOnlineBox.IsChecked ?? false
             };
             
             _ReturnLogHandler(log2discordHandler);

@@ -6,12 +6,13 @@ namespace S_Utilities.Settings
 {
     public partial class S_Config : ViewModel
     {
-        private string _StringProperty = "root";
-        private int _IntProperty = 0;
-        private bool _BoolProperty = true;
-
-        public string StringProperty { get => _StringProperty; set => SetValue(ref _StringProperty, value); }
-        public int IntProperty { get => _IntProperty; set => SetValue(ref _IntProperty, value); }
-        public bool BoolProperty { get => _BoolProperty; set => SetValue(ref _BoolProperty, value); }
+        private bool _MasterSwitch = true;
+        public bool MasterSwitch { get => _MasterSwitch; set => SetValue(ref _MasterSwitch, value); }
+        
+        private bool _Log2Discord = true;
+        public bool Log2Discord { get => _Log2Discord; set => SetValue(ref _Log2Discord, value); }
+        
+        private bool _EjectorLimiter = true;
+        public bool EjectorLimiter { get => _EjectorLimiter; set => SetValue(ref _EjectorLimiter, value); }
     }
 }

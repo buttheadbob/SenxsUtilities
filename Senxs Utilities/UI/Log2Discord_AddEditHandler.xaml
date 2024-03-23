@@ -5,8 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:Senxs_Utilities.UI"
         mc:Ignorable="d"
-        Title="Log2Discord_AddEditHandler" Height="300" Width="500"
-        MouseLeftButtonDown="DragMouseLeftButtonDown"
+        Title="Log2Discord_AddEditHandler" Height="340" Width="500"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent">
     <Grid>
         <Border CornerRadius="15" Background="LightBlue" Margin="10">
@@ -28,11 +27,15 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="10"/>
                 </Grid.RowDefinitions>
                 
-                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="Add or Edit a Log2Discord Handler" HorizontalAlignment="Center" FontSize="20" FontWeight="DemiBold"/>
+                <Border Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Grid.RowSpan="2" Background="LightSlateGray" Margin="20,0,20,3" CornerRadius="0,0,15,15" MouseLeftButtonDown="DragMouseLeftButtonDown">
+                    <TextBlock Text="Add or Edit a Log2Discord Handler" HorizontalAlignment="Center" FontSize="20" FontWeight="DemiBold" />
+                </Border>
                 
                 <TextBlock Name="Namebox" Grid.Row="2" Grid.Column="1" Text="Log2Discord Handler Name:" VerticalAlignment="Center" Margin="5"/>
                 <TextBox Name="NameBox" Grid.Row="2" Grid.Column="2"/>
@@ -48,14 +51,20 @@
                 
                 <TextBlock Name="Roles2Ping" Grid.Row="6" Grid.Column="1" Text="Roles To Ping" VerticalAlignment="Center" ToolTip="Separate each role id with a comma." Margin="5" />
                 <TextBox Name="Roles2PingBox" Grid.Row="6" Grid.Column="2"/>
+
+                <TextBlock Name="Members2Ping" Grid.Row="7" Grid.Column="1" Text="Members To Ping" VerticalAlignment="Center" ToolTip="Separate each member id with a comma." Margin="5" />
+                <TextBox Name="Members2PingBox" Grid.Row="7" Grid.Column="2" />
                 
-                <TextBlock Name="LogNames" Grid.Row="7" Grid.Column="1" Text="Logger/Class Names To Log" VerticalAlignment="Center" ToolTip="Leave blank for all logs.  Separate multiple class/names with commas for more than one entry." Margin="5" />
-                <TextBox Name="LogNamesBox" Grid.Row="7" Grid.Column="2"/>
+                <TextBlock Name="LogNames" Grid.Row="8" Grid.Column="1" Text="Logger/Class Names To Log" VerticalAlignment="Center" ToolTip="Leave blank for all logs.  Separate multiple class/names with commas for more than one entry." Margin="5" />
+                <TextBox Name="LogNamesBox" Grid.Row="8" Grid.Column="2"/>
                 
-                <TextBlock Name="LogNames_Ignore" Grid.Row="8" Grid.Column="1" Text="Logger/Class Names to Ignore" VerticalAlignment="Center" ToolTip="Can leave blank, any logger class/names here will not be passed through to discord.  Separate multiple class/names with commas." Margin="5"/>
-                <TextBox Name="LogNames_IgnoreBox" Grid.Row="8" Grid.Column="2"/>
+                <TextBlock Name="LogNames_Ignore" Grid.Row="9" Grid.Column="1" Text="Logger/Class Names to Ignore" VerticalAlignment="Center" ToolTip="Can leave blank, any logger class/names here will not be passed through to discord.  Separate multiple class/names with commas." Margin="5"/>
+                <TextBox Name="LogNames_IgnoreBox" Grid.Row="9" Grid.Column="2"/>
                 
-                <StackPanel Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Name="OnlyWhenOnline" Grid.Row="10" Grid.Column="1" Text="Only show logs after server has gone online" Margin="5"/>
+                <CheckBox Name="OnlyWhenOnlineBox" Grid.Row="10" Grid.Column="2" VerticalAlignment="Center"/>
+                
+                <StackPanel Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
                     <Button Name="SaveButton" Content="Save" Click="SaveButton_Click" VerticalAlignment="Center" Margin="5" Width="100" Height="40"/>
                     <Button Name="CancelButton" Content="Cancel" Click="CancelButton_Click" VerticalAlignment="Center" Margin="5" Width="100" Height="40" />
                 </StackPanel>
