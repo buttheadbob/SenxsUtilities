@@ -89,7 +89,7 @@
                         <DataGridTemplateColumn Header="Log Names" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding LogNames_Ignore, Mode=OneWay}" DisplayMemberPath="." />
+                                    <ComboBox ItemsSource="{Binding LogNames, Mode=OneWay}" DisplayMemberPath="." />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -97,7 +97,7 @@
                         <DataGridTemplateColumn Header="Names Ignored" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding LogNames, Mode=OneWay}" DisplayMemberPath="." />
+                                    <ComboBox ItemsSource="{Binding LogNames_Ignore, Mode=OneWay}" DisplayMemberPath="." />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
