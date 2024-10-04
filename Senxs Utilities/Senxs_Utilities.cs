@@ -1,6 +1,7 @@
 ﻿using NLog;
 using System;
 using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using NLog.Config;
 using Torch;
@@ -12,6 +13,8 @@ using Torch.Session;
 using S_Utilities.UI;
 using S_Utilities.Settings;
 using S_Utilities.Utils;
+using Torch.Managers;
+using Torch.Managers.PatchManager;
 
 // ReSharper disable ClassNeverInstantiated.Global
 
@@ -28,16 +31,26 @@ namespace S_Utilities
 
         private static Persistent<S_Config>? _config;
         public static S_Config? Config => _config?.Data;
-
+        public static Senxs_Utilities? Instance { get; private set; }
         public static bool IsOnline = false;
         public static string InstName = "";
+        public static bool IsUnloaded;
 
         public override void Init(ITorchBase torch)
         {
             base.Init(torch);
             InstName = Torch.Config.InstanceName;
+            Instance = this;
 
             SetupConfig();
+
+            // 0 == Normal, 1 == RestartingStopped, 2 == RestartingRunning
+            switch (Config?.RestartState)
+            {
+                case 1:
+                    torch.Config.Autostart = true;
+                    break;
+            }
 
             TorchSessionManager? sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
             if (sessionManager != null)
@@ -45,7 +58,6 @@ namespace S_Utilities
             else
                 Log.Warn("No session manager loaded!");
 
-            // Torch's new event handler logger things is still WIP so lets not get to cozy with it yet...
             LoggingConfiguration config = LogManager.Configuration ?? new LoggingConfiguration();
             SenXCustomTarget customTarget = new ();
             config.AddTarget("SenXCustomTarget", customTarget);
@@ -63,12 +75,28 @@ namespace S_Utilities
             {
                 case TorchSessionState.Loaded:
                     Log.Info("Session Loaded!");
+                    IsUnloaded = false;
                     IsOnline = true;
+
+                    if (Config!.MasterSwitch && Config is { LocalCommandServer: true, StartPipeOnServerStart: true, MasterSwitch: true } && NamedPipeServer.Status == 0)
+                    {
+                        NamedPipeServer.StartServer();
+                        Log.Info($"Pipe Server Started: {NamedPipeServer.GetPipeName()}");
+                    }
+                        
                     break;
 
                 case TorchSessionState.Unloading:
                     Log.Info("Session Unloading!");
+                    /*
+                     if (Config!.StopPipeOnServerStop && NamedPipeServer.Status == 1)
+                        NamedPipeServer.StopServer();
+                        */
                     IsOnline = false;
+                    break;
+                
+                case TorchSessionState.Unloaded:
+                    IsUnloaded = true;
                     break;
             }
         }

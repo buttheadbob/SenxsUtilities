@@ -57,6 +57,28 @@
                            </ControlTemplate>
                        </Button.Template>
                    </Button>
+                   
+                   <Button Content="Start Log SPAM" Margin="5, 5, 5, 10" Width="130" Height="25"
+                           Click="START_CreateTestLogSPAM_ButtonClick">
+                       <Button.Template>
+                           <ControlTemplate TargetType="Button">
+                               <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                   <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                               </Border>
+                           </ControlTemplate>
+                       </Button.Template>
+                   </Button>
+                   
+                   <Button Content="Stop Log SPAM" Margin="5, 5, 5, 10" Width="130" Height="25"
+                           Click="STOP_CreateTestLogSPAM_ButtonClick">
+                       <Button.Template>
+                           <ControlTemplate TargetType="Button">
+                               <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                   <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                               </Border>
+                           </ControlTemplate>
+                       </Button.Template>
+                   </Button>
                </StackPanel>
                
                <Rectangle Grid.Row="1" Fill="SteelBlue" Height="25" />

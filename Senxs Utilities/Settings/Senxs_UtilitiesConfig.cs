@@ -12,7 +12,10 @@ namespace S_Utilities.Settings
         private bool _Log2Discord = true;
         public bool Log2Discord { get => _Log2Discord; set => SetValue(ref _Log2Discord, value); }
         
-        private bool _EjectorLimiter = true;
+        private bool _LocalCommandServer = false;
+        public bool LocalCommandServer { get => _LocalCommandServer; set => SetValue(ref _LocalCommandServer, value); }
+        
+        private bool _EjectorLimiter = false;
         public bool EjectorLimiter { get => _EjectorLimiter; set => SetValue(ref _EjectorLimiter, value); }
     }
 }

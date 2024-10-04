@@ -1,0 +1,84 @@
+﻿<UserControl x:Class="Senxs_Utilities.Senxs_Utilities.UI.LocalCommands_Settings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Senxs_Utilities.Senxs_Utilities.UI"
+             xmlns:vm="clr-namespace:S_Utilities.Settings"
+             mc:Ignorable="d"
+             d:DesignHeight="400" d:DesignWidth="800">
+    <UserControl.Resources>
+        <vm:S_Config x:Key="S_Config" />
+    </UserControl.Resources>
+
+    <UserControl.DataContext>
+        <StaticResource ResourceKey="S_Config" />
+    </UserControl.DataContext>
+    
+    <GroupBox Header="Local Commands" Margin="3">
+        <StackPanel>    
+            <GroupBox Header="Status" Margin="3">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Pipe Server: " Margin="3" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="StatusText" Text="Offline" Margin="3" VerticalAlignment="Center"/>
+                    <TextBlock Width="100"/>
+                    <TextBlock Text="Pipe Name: " Margin="3" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="NameText" Margin="3" VerticalAlignment="Center"/>
+                    <TextBlock Width="100"/>
+                    <TextBlock Text="Remember to give each instance a unique name if you have more than 1 Torch running." TextWrapping="Wrap" VerticalAlignment="Center" Width="300"/>
+                </StackPanel>
+            </GroupBox>
+            
+            <GroupBox Header="Server Settings" Margin="3">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <CheckBox Grid.Row="0" Grid.Column="0" Name="chkStart_OnPluginLoad" IsChecked="{Binding StartPipeOnPluginLoad, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Start automatically when plugin loaded." Margin="3"/>
+                        <CheckBox Grid.Row="0" Grid.Column="1" Name="chkStart_OnServerStart" IsChecked="{Binding StartPipeOnServerStart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Start automatically when server starts." Margin="3"/>
+                        
+                        <CheckBox Grid.Row="1" Grid.Column="0" Name="chkStop_OnServerStop" IsChecked="{Binding StopPipeOnServerStop, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Stop automatically when server goes offline." Margin="3"/>
+                        
+                        <GroupBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Header="Enable Commands" Margin="3">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                
+                                <CheckBox Grid.Row="0" Margin="3" IsChecked="{Binding RestartTorchStoppedState, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Name="chkRestartStopped" Content="Restart Torch in Stopped state.  This will ignore the the restart option in Torch config and prevent it from auto starting."/>
+                                <CheckBox Grid.Row="1" Margin="3" IsChecked="{Binding RestartTorchRunningState, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Name="chkRestartRunning" Content="Restart Torch in Running state.  This will ignore the the restart option in Torch config and force it too start."/>
+                                <CheckBox Grid.Row="2" Margin="3" IsChecked="{Binding SaveAndCloseTorch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Name="chkSaveAndShutDownNoRestart" Content="Save and close torch.  No automatic restart."/>
+                                
+                                <StackPanel Grid.Row="3" Orientation="Horizontal">
+                                    <TextBlock Text="How long to wait before saving and closing Torch (in minutes): " Margin="3" VerticalAlignment="Center"/>
+                                    <TextBox Name="txtSaveAndShutDownNoRestartTime" Width="50" VerticalAlignment="Center" Text="{Binding Path=SaveAndShutDownNoRestartTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="3"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="4" Orientation="Horizontal">
+                                    <TextBlock Text="Message to send players: " Margin="3" VerticalAlignment="Center"/>
+                                    <TextBox Name="txtMessageToPlayers" VerticalAlignment="Center" MinWidth="500" Text="{Binding Path=MessageToPlayers, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="3"/>
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+                        
+                    </Grid>
+                    
+                </StackPanel>
+            </GroupBox>
+            
+            <Button Content="Save Settings" Margin="3" Click="SaveSettingsButtonClick"/>
+        </StackPanel>    
+    </GroupBox>
+</UserControl>

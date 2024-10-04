@@ -1,16 +1,97 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Timers;
 using Discord;
 using Discord.Webhook;
 using NLog;
 using S_Utilities.Settings;
+using VRage;
+using VRage.Collections;
 
 namespace S_Utilities.Utils
 {
     public static class Log2Discord_Processor
     {
         private static S_Config? Config => Senxs_Utilities.Config;
-        
-        public static async void ProcessLogEvent(LogEventInfo logEvent)
+        private static readonly Dictionary<string,List<WebHookMessage>> MessagesForDiscord = new();
+        private static readonly Timer SendTimer = new(TimeSpan.FromSeconds(5).TotalMilliseconds);
+        private static readonly FastResourceLock _lock = new();
+
+        static Log2Discord_Processor()
+        {
+            SendTimer.Elapsed += SendMessages;
+            SendTimer.Start();
+        }
+
+        private static async void SendMessages(object sender, ElapsedEventArgs e)
+        {
+            using (_lock.AcquireExclusiveUsing())
+            {
+                List<string> keys = MessagesForDiscord.Keys.ToList();
+                if (!keys.Any()) return;
+            
+                foreach (string message in keys)
+                {
+                    using DiscordWebhookClient client = new (message);
+                    if (!MessagesForDiscord.TryGetValue(message, out List<WebHookMessage> messages)) continue;
+                
+                    if (messages.Count > 10)
+                    {
+                        EmbedBuilder embed = new ()
+                        {
+                            Description = "WARNING:  GENERATING TOO MANY LOGS TO POST!!!", Color = Color.DarkRed,
+                        };
+
+                        try
+                        {
+                            await client.SendMessageAsync(Senxs_Utilities.InstName, embeds: new[] { embed.Build() });
+                        }
+                        catch (Exception exception)
+                        {
+                            Senxs_Utilities.Log.Error(exception, exception.Message);
+                        }
+                        MessagesForDiscord.Remove(message);
+                        continue;
+                    }
+
+                    List<Embed> embeds = new();
+                    HashSet<ulong> allowedRoleID = new();
+                    HashSet<ulong> allowedMemberIds = new();
+                
+                    foreach (WebHookMessage hookMessage in messages)
+                    {
+                        embeds.AddRange(hookMessage.Embeds);
+
+                        foreach (ulong roleID in hookMessage.RoleIDs)
+                            allowedRoleID.Add(roleID);
+
+                        foreach (ulong userID in hookMessage.UserIDs)
+                            allowedMemberIds.Add(userID);
+                    }
+                
+                    AllowedMentions mentions = new()
+                    {
+                        RoleIds = allowedRoleID.ToList(), 
+                        UserIds = allowedMemberIds.ToList()
+                    };
+
+                    try
+                    {
+                        await client.SendMessageAsync(Senxs_Utilities.InstName, embeds: embeds, allowedMentions: mentions);
+                    }
+                    catch (Exception exception)
+                    {
+                        Senxs_Utilities.Log.Error(exception, exception.Message);
+                    }
+                    
+                    MessagesForDiscord.Remove(message);
+                }
+            }
+        }
+
+        public static void ProcessLogEvent(LogEventInfo logEvent)
         {
             if (Config is null) return;
             if (!Config.MasterSwitch) return;
@@ -29,8 +110,6 @@ namespace S_Utilities.Utils
                 
                 if (logEvent.Level.Ordinal < logHandler.MinLogLevel || logEvent.Level.Ordinal > logHandler.MaxLogLevel)
                     continue;
-
-                using DiscordWebhookClient client = new (logHandler.DiscordWebHook);
                 
                 StringBuilder sb = new ();
                 sb.AppendLine($"**{logEvent.Level.Name}**");
@@ -60,14 +139,33 @@ namespace S_Utilities.Utils
                     }
                 };
 
-                AllowedMentions allowedMentions = new ()
+                WebHookMessage webhookMessage = new()
                 {
-                    RoleIds = logHandler.RolesToPing,
-                    UserIds = logHandler.MembersToPing
+                    RoleIDs = logHandler.RolesToPing,
+                    UserIDs = logHandler.MembersToPing
                 };
                 
-                await client.SendMessageAsync(text: Senxs_Utilities.InstName, embeds: new[] { embed.Build() }, allowedMentions: allowedMentions);
+                webhookMessage.Embeds.Add(embed.Build());
+
+                if (MessagesForDiscord.TryGetValue(logHandler.DiscordWebHook, out List<WebHookMessage>? list))
+                {
+                    list.Add(webhookMessage);
+                    return;
+                }
+
+                using (_lock.AcquireSharedUsing())
+                {
+                    MessagesForDiscord[logHandler.DiscordWebHook] = new List<WebHookMessage>{webhookMessage};
+                }
             }
         }
     }
+    
+    public sealed class WebHookMessage
+    {
+        public List<Embed> Embeds = new ();
+        public List<ulong> RoleIDs = new ();
+        public List<ulong> UserIDs = new ();
+    }
 }
+

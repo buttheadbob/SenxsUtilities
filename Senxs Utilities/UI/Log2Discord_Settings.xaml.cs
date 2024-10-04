@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using NLog;
@@ -12,6 +13,7 @@ namespace Senxs_Utilities.UI
     {
         private readonly S_Config? Config;
         private readonly Action SaveConfig;
+        private bool _spamlog = false;
         
         // Do not use this for normal logging!!!
         private static readonly Logger Log = LogManager.GetLogger("Test Logger");
@@ -82,7 +84,7 @@ namespace Senxs_Utilities.UI
             unused.Show();
         }
 
-        private void CreateTestLog_ButtonClick(object sender, RoutedEventArgs e)
+        private void CreateTestLog_ButtonClick(object? sender, RoutedEventArgs? e)
         {
             Log.Info("Creating test log events:");
             Log.Debug("Test Debug Log");
@@ -91,6 +93,27 @@ namespace Senxs_Utilities.UI
             Log.Warn("Test Warn Log");
             Log.Error("Test Error Log");
             Log.Fatal("Test Fatal Log");
+        }
+
+        private async void START_CreateTestLogSPAM_ButtonClick(object sender, RoutedEventArgs e)
+        {
+            _spamlog = true;
+            while (_spamlog)
+            {
+                for (int x = 0; x < 50; x++)
+                    CreateTestLog_ButtonClick(null, null);
+                await Sleeper(5);
+            }
+        }
+        
+        private void STOP_CreateTestLogSPAM_ButtonClick(object sender, RoutedEventArgs e)
+        {
+            _spamlog = false;
+        }
+
+        private static async Task Sleeper(int seconds)
+        {
+            await Task.Delay(seconds * 1000);
         }
     }
 }

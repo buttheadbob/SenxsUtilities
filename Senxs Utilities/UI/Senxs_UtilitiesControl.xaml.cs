@@ -1,4 +1,5 @@
 ﻿using S_Utilities.Settings;
+using Senxs_Utilities.Senxs_Utilities.UI;
 using Senxs_Utilities.UI;
 
 namespace S_Utilities.UI
@@ -12,10 +13,14 @@ namespace S_Utilities.UI
         {
             InitializeComponent();
             Plugin = plugin;
+            
             Log2Discord_Settings discordSettings = new (Config, SaveRequested);
+            LocalCommands_Settings localCommandsSettings = new (Config, SaveRequested);
             // EjectorSettings ejectorSettings = new EjectorSettings(Plugin.Config, SaveRequested);  --- NOT IMPLEMENTED YET
+            
             DataContext = Config;
             DiscordSettingsTab.Content = discordSettings;
+            LocalCommandsTab.Content = localCommandsSettings;
             // EjectorSettingsTab.Content = ejectorSettings;
         }
 

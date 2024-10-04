@@ -210,8 +210,12 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Senxs Utilities\Senxs_Utilities.cs" />
+    <Compile Include="Senxs Utilities\Settings\LocalCommands.cs" />
     <Compile Include="Senxs Utilities\Settings\Log2Discord_Config.cs" />
     <Compile Include="Senxs Utilities\Settings\Senxs_UtilitiesConfig.cs" />
+    <Compile Include="Senxs Utilities\UI\LocalCommands_Settings.xaml.cs">
+      <DependentUpon>LocalCommands_Settings.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Senxs Utilities\UI\Log2Discord_AddEditHandler.xaml.cs">
       <DependentUpon>Log2Discord_AddEditHandler.xaml</DependentUpon>
     </Compile>
@@ -224,8 +228,10 @@
     <Compile Include="Senxs Utilities\UI\Senxs_UtilitiesControl.xaml.cs">
       <DependentUpon>Senxs_UtilitiesControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Senxs Utilities\Utils\CommandManager.cs" />
     <Compile Include="Senxs Utilities\Utils\Log2Discord_Processor.cs" />
     <Compile Include="Senxs Utilities\Utils\LogHandler.cs" />
+    <Compile Include="Senxs Utilities\Utils\NamedPipeServer.cs" />
     <Compile Include="Senxs Utilities\Utils\SenXCustomLoggerClass.cs" />
     <EmbeddedResource Include="Senxs Utilities\Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -253,6 +259,7 @@
     </Resource>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Senxs Utilities\UI\LocalCommands_Settings.xaml" />
     <Page Include="Senxs Utilities\UI\Log2Discord_AddEditHandler.xaml" />
     <Page Include="Senxs Utilities\UI\Log2Discord_Settings.xaml" />
     <Page Include="Senxs Utilities\UI\Ejector_Settings.xaml" />
