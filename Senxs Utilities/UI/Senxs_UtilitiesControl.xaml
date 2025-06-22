@@ -62,6 +62,7 @@
                   
                   <TabItem Name="DiscordSettingsTab" Header="Log2Discord Settings"/>
                   <TabItem Name="LocalCommandsTab" Header="Local Commands Settings"/>
+                  <TabItem Name="AdminToolsTab" Header="Admin Tools"/>
                   <!-- <TabItem Name="EjectorSettingsTab" Header="Ejector Settings"/> -->
             </TabControl>
       </Grid>

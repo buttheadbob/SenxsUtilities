@@ -1,0 +1,31 @@
+﻿<UserControl x:Class="Senxs_Utilities.Senxs_Utilities.UI.Admin_ToolsSettings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Senxs_Utilities.Senxs_Utilities.UI"
+             xmlns:settings="clr-namespace:S_Utilities.Settings"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance settings:S_Config, IsDesignTimeCreatable=True}">
+    <StackPanel>
+        <CheckBox Name="AdminToolsEnable" 
+                  Content="Enabled/Disable All Tools" 
+                  IsChecked="{Binding AdminToolsEnable}"/>
+        <CheckBox Name="AdminToolsRefillOxygen" 
+                  Content="Refill Oxygen" 
+                  IsChecked="{Binding AdminRefillOxygen}"/>
+        <CheckBox Name="AdminToolsRefillHydrogen" 
+                  Content="Refill Hydrogen" 
+                  IsChecked="{Binding AdminRefillHydrogen}"/>
+        <CheckBox Name="AdminToolsRefillEnergy" 
+                  Content="Refill Energy" 
+                  IsChecked="{Binding AdminRefillEnergy}"/>
+        <CheckBox Name="IsLobby" 
+                  Content="Is Lobby? >> If lobby, all players will get refilled." 
+                  IsChecked="{Binding IsLobby}"/>
+        <Button Content="Save Settings" 
+                Margin="3" 
+                Click="SaveSettingsButtonClick"/>
+        
+    </StackPanel>
+</UserControl>

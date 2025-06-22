@@ -35,6 +35,7 @@ namespace S_Utilities
         public static bool IsOnline = false;
         public static string InstName = "";
         public static bool IsUnloaded;
+        public readonly AdminTools _adminTools = new ();
 
         public override void Init(ITorchBase torch)
         {

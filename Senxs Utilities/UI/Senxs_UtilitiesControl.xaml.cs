@@ -16,11 +16,13 @@ namespace S_Utilities.UI
             
             Log2Discord_Settings discordSettings = new (Config, SaveRequested);
             LocalCommands_Settings localCommandsSettings = new (Config, SaveRequested);
+            Admin_ToolsSettings Admin_ToolsSettings = new (Config, SaveRequested);
             // EjectorSettings ejectorSettings = new EjectorSettings(Plugin.Config, SaveRequested);  --- NOT IMPLEMENTED YET
             
             DataContext = Config;
             DiscordSettingsTab.Content = discordSettings;
             LocalCommandsTab.Content = localCommandsSettings;
+            AdminToolsTab.Content = Admin_ToolsSettings;
             // EjectorSettingsTab.Content = ejectorSettings;
         }
 

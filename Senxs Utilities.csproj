@@ -210,9 +210,13 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Senxs Utilities\Senxs_Utilities.cs" />
+    <Compile Include="Senxs Utilities\Settings\AdminTools.cs" />
     <Compile Include="Senxs Utilities\Settings\LocalCommands.cs" />
     <Compile Include="Senxs Utilities\Settings\Log2Discord_Config.cs" />
     <Compile Include="Senxs Utilities\Settings\Senxs_UtilitiesConfig.cs" />
+    <Compile Include="Senxs Utilities\UI\Admin_Tools.xaml.cs">
+      <DependentUpon>Admin_Tools.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Senxs Utilities\UI\LocalCommands_Settings.xaml.cs">
       <DependentUpon>LocalCommands_Settings.xaml</DependentUpon>
     </Compile>
@@ -228,6 +232,7 @@
     <Compile Include="Senxs Utilities\UI\Senxs_UtilitiesControl.xaml.cs">
       <DependentUpon>Senxs_UtilitiesControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Senxs Utilities\Utils\AdminTools.cs" />
     <Compile Include="Senxs Utilities\Utils\CommandManager.cs" />
     <Compile Include="Senxs Utilities\Utils\Log2Discord_Processor.cs" />
     <Compile Include="Senxs Utilities\Utils\LogHandler.cs" />
@@ -259,6 +264,7 @@
     </Resource>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Senxs Utilities\UI\Admin_Tools.xaml" />
     <Page Include="Senxs Utilities\UI\LocalCommands_Settings.xaml" />
     <Page Include="Senxs Utilities\UI\Log2Discord_AddEditHandler.xaml" />
     <Page Include="Senxs Utilities\UI\Log2Discord_Settings.xaml" />

@@ -84,8 +84,17 @@
                <Rectangle Grid.Row="1" Fill="SteelBlue" Height="25" />
                <TextBlock Name="LogLevelInfo" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 
-               <DataGrid Grid.Row="2" Grid.Column="0" HeadersVisibility="Column" AutoGenerateColumns="False" ItemsSource="{Binding LogHandlers}" MaxHeight="200" CanUserAddRows="False" CanUserDeleteRows="False" RowBackground="Bisque">
-                   <DataGrid.Columns>
+               <DataGrid Grid.Row="2" 
+                         Grid.Column="0" 
+                         HeadersVisibility="Column" 
+                         AutoGenerateColumns="False" 
+                         ItemsSource="{Binding LogHandlers}" 
+                         MaxHeight="200" 
+                         CanUserAddRows="False" 
+                         CanUserDeleteRows="False" 
+                         RowBackground="Bisque">
+                   
+                    <DataGrid.Columns>
                         <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="Auto"/>
                         <DataGridTextColumn Header="WebHook" Binding="{Binding DiscordWebHook, Mode=OneWay}" Width="*" />
                         <DataGridTextColumn Header="Min Log Level" Binding="{Binding MinLogLevel, Mode=OneWay}" Width="Auto" />
@@ -95,7 +104,8 @@
                         <DataGridTemplateColumn Header="Ping Roles" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding RolesToPing, Mode=OneWay}" DisplayMemberPath="." />
+                                    <ComboBox ItemsSource="{Binding RolesToPing, Mode=OneWay}" 
+                                              DisplayMemberPath="." />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -103,7 +113,8 @@
                         <DataGridTemplateColumn Header="Ping Members" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding MembersToPing, Mode=OneWay}" DisplayMemberPath="." />
+                                    <ComboBox ItemsSource="{Binding MembersToPing, Mode=OneWay}" 
+                                              DisplayMemberPath="." />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -111,7 +122,8 @@
                         <DataGridTemplateColumn Header="Log Names" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding LogNames, Mode=OneWay}" DisplayMemberPath="." />
+                                    <ComboBox ItemsSource="{Binding LogNames, Mode=OneWay}" 
+                                              DisplayMemberPath="." />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -119,7 +131,8 @@
                         <DataGridTemplateColumn Header="Names Ignored" Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding LogNames_Ignore, Mode=OneWay}" DisplayMemberPath="." />
+                                    <ComboBox ItemsSource="{Binding LogNames_Ignore, Mode=OneWay}" 
+                                              DisplayMemberPath="." />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

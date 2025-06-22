@@ -21,10 +21,7 @@ namespace Senxs_Utilities.Senxs_Utilities.UI
             init();
         }
 
-        private void SaveSettingsButtonClick(object sender, RoutedEventArgs e)
-        {
-            SaveConfig();
-        }
+        private void SaveSettingsButtonClick(object sender, RoutedEventArgs e) => SaveConfig();
 
         private void init()
         {
