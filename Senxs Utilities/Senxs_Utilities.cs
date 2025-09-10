@@ -1,7 +1,6 @@
 ﻿using NLog;
 using System;
 using System.IO;
-using System.Windows;
 using System.Windows.Controls;
 using NLog.Config;
 using Torch;
@@ -13,8 +12,6 @@ using Torch.Session;
 using S_Utilities.UI;
 using S_Utilities.Settings;
 using S_Utilities.Utils;
-using Torch.Managers;
-using Torch.Managers.PatchManager;
 
 // ReSharper disable ClassNeverInstantiated.Global
 

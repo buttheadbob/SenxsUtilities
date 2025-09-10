@@ -10,7 +10,7 @@ namespace S_Utilities.Utils
 {
     public class AdminTools : IDisposable 
     {
-        private Timer SuitConsumableRefillTimer { get; set; } = new (30000);
+        private Timer SuitConsumableRefillTimer { get; set; } = new (10000);
         private static S_Config? MyConfig => Senxs_Utilities.Config;
         private static Dictionary<ulong, DateTime> PlayerRefill { get; set; } = new();
 
@@ -24,6 +24,8 @@ namespace S_Utilities.Utils
         {
             if (!Senxs_Utilities.IsOnline) return;
             if(MyConfig is null) return;
+            if (!MyConfig.MasterSwitch) return;
+            if (!MyConfig.AdminToolsEnable) return;
             
             List<IMyPlayer> players = new ();
             MyAPIGateway.Players.GetPlayers(players);
@@ -31,10 +33,11 @@ namespace S_Utilities.Utils
             {
                 MySession.Static.Players.TryGetPlayerId(players[index].IdentityId, out MyPlayer.PlayerId playerId);
                 MySession.Static.Players.TryGetPlayerById(playerId, out MyPlayer player);
-                
+
                 if (!MyConfig.IsLobby)
-                    if (!PlayerRefill.ContainsKey(player.Id.SteamId) && (int)players[index].PromoteLevel < 4) continue;
-                
+                    if (!PlayerRefill.ContainsKey(player.Id.SteamId) && (int)players[index].PromoteLevel < 4)
+                        continue;
+
                 if (MyConfig.AdminRefillOxygen)
                     Sandbox.Game.MyVisualScriptLogicProvider.SetPlayersOxygenLevel(players[index].Identity.IdentityId, 1);
 
@@ -43,6 +46,25 @@ namespace S_Utilities.Utils
 
                 if (MyConfig.AdminRefillEnergy)
                     Sandbox.Game.MyVisualScriptLogicProvider.SetPlayersEnergyLevel(players[index].Identity.IdentityId, 1);
+                
+                if (MyConfig.AdminRefillHealth)
+                    Sandbox.Game.MyVisualScriptLogicProvider.SetPlayersHealth(players[index].Identity.IdentityId, 100);
+                
+                if (players[index].Identity is MyIdentity mIdent)
+                {
+                    if (MyConfig.AdminResetRadiation)
+                    {
+                        // Prevent the radiation panel from disappearing and reappearing annoyingly while admin is working.
+                        if (mIdent.Character.StatComp.Radiation.Value > 5f)
+                            mIdent.Character.StatComp.Radiation.Value = 2f;
+                    }
+                    
+                    if (MyConfig.AdminResetRadiationImmunity)
+                        mIdent.Character.StatComp.RadiationImmunity.Value = 100f;
+                    
+                    if (MyConfig.AdminRefillFood)
+                        mIdent.Character.StatComp.Food.Value = 100f;
+                }
             }
         }
         

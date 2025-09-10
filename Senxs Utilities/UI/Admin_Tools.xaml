@@ -8,24 +8,44 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance settings:S_Config, IsDesignTimeCreatable=True}">
     <StackPanel>
-        <CheckBox Name="AdminToolsEnable" 
-                  Content="Enabled/Disable All Tools" 
-                  IsChecked="{Binding AdminToolsEnable}"/>
-        <CheckBox Name="AdminToolsRefillOxygen" 
-                  Content="Refill Oxygen" 
-                  IsChecked="{Binding AdminRefillOxygen}"/>
-        <CheckBox Name="AdminToolsRefillHydrogen" 
-                  Content="Refill Hydrogen" 
-                  IsChecked="{Binding AdminRefillHydrogen}"/>
-        <CheckBox Name="AdminToolsRefillEnergy" 
-                  Content="Refill Energy" 
-                  IsChecked="{Binding AdminRefillEnergy}"/>
-        <CheckBox Name="IsLobby" 
-                  Content="Is Lobby? >> If lobby, all players will get refilled." 
-                  IsChecked="{Binding IsLobby}"/>
+        <CheckBox Content="Enabled/Disable All Tools" 
+                  IsChecked="{Binding AdminToolsEnable}"
+                  HorizontalAlignment="Center"/>
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+            <GroupBox Header="Normal Settings">
+                <StackPanel>
+                    
+                    <CheckBox Content="Refill Oxygen" 
+                              IsChecked="{Binding AdminRefillOxygen}"/>
+                    <CheckBox Content="Refill Hydrogen" 
+                              IsChecked="{Binding AdminRefillHydrogen}"/>
+                    <CheckBox Content="Refill Energy" 
+                              IsChecked="{Binding AdminRefillEnergy}"/>
+                    
+                </StackPanel>
+            </GroupBox>
+            
+            <GroupBox Header="Apex Settings">
+                <StackPanel>
+                    <CheckBox Content="Refill Food" 
+                              IsChecked="{Binding AdminRefillFood}"/>
+                    <CheckBox Content="Refill Health" 
+                              IsChecked="{Binding AdminRefillHealth}"/>
+                    <CheckBox Content="Refill Radiation Immunity" 
+                              IsChecked="{Binding AdminResetRadiationImmunity}"/>
+                    <CheckBox Content="Reset Radiation" 
+                              IsChecked="{Binding AdminResetRadiation}"/>
+                </StackPanel>
+            </GroupBox>
+        
+        </StackPanel>
+        <CheckBox Content="Is Lobby? >> If lobby, all players will get affected." 
+                  IsChecked="{Binding IsLobby}"
+                  HorizontalAlignment="Center"/>
         <Button Content="Save Settings" 
                 Margin="3" 
                 Click="SaveSettingsButtonClick"/>
-        
     </StackPanel>
+    
 </UserControl>
