@@ -8,18 +8,17 @@ using Discord.Webhook;
 using NLog;
 using S_Utilities.Settings;
 using VRage;
-using VRage.Collections;
 
 namespace S_Utilities.Utils
 {
-    public static class Log2Discord_Processor
+    public static class Log2DiscordProcessor
     {
         private static S_Config? Config => Senxs_Utilities.Config;
         private static readonly Dictionary<string,List<WebHookMessage>> MessagesForDiscord = new();
         private static readonly Timer SendTimer = new(TimeSpan.FromSeconds(5).TotalMilliseconds);
-        private static readonly FastResourceLock _lock = new();
+        private static readonly FastResourceLock Lock = new();
 
-        static Log2Discord_Processor()
+        static Log2DiscordProcessor()
         {
             SendTimer.Elapsed += SendMessages;
             SendTimer.Start();
@@ -27,7 +26,7 @@ namespace S_Utilities.Utils
 
         private static async void SendMessages(object sender, ElapsedEventArgs e)
         {
-            using (_lock.AcquireExclusiveUsing())
+            using (Lock.AcquireExclusiveUsing())
             {
                 List<string> keys = MessagesForDiscord.Keys.ToList();
                 if (!keys.Any()) return;
@@ -57,23 +56,23 @@ namespace S_Utilities.Utils
                     }
 
                     List<Embed> embeds = new();
-                    HashSet<ulong> allowedRoleID = new();
+                    HashSet<ulong> allowedRoleId = new();
                     HashSet<ulong> allowedMemberIds = new();
                 
                     foreach (WebHookMessage hookMessage in messages)
                     {
                         embeds.AddRange(hookMessage.Embeds);
 
-                        foreach (ulong roleID in hookMessage.RoleIDs)
-                            allowedRoleID.Add(roleID);
+                        foreach (ulong roleId in hookMessage.RoleIDs)
+                            allowedRoleId.Add(roleId);
 
-                        foreach (ulong userID in hookMessage.UserIDs)
-                            allowedMemberIds.Add(userID);
+                        foreach (ulong userId in hookMessage.UserIDs)
+                            allowedMemberIds.Add(userId);
                     }
                 
                     AllowedMentions mentions = new()
                     {
-                        RoleIds = allowedRoleID.ToList(), 
+                        RoleIds = allowedRoleId.ToList(), 
                         UserIds = allowedMemberIds.ToList()
                     };
 
@@ -114,14 +113,39 @@ namespace S_Utilities.Utils
                 StringBuilder sb = new ();
                 sb.AppendLine($"**{logEvent.Level.Name}**");
                 sb.AppendLine();
-                sb.AppendLine($"**Logger:** {logEvent.LoggerName}");
-                sb.AppendLine($"**Message:** {logEvent.Message}");
-                
-                if (!string.IsNullOrWhiteSpace(logEvent.Exception?.Message))
-                    sb.AppendLine($"**Exception:** {logEvent.Exception?.Message}");
-                
-                if (logEvent.HasStackTrace)
-                    sb.AppendLine($"**Stack Trace:** {logEvent.Exception?.StackTrace}");
+                sb.AppendLine("**Logger**");
+                sb.AppendLine($"```{logEvent.LoggerName}```");
+                sb.AppendLine();
+                sb.AppendLine("**Message:**");
+                sb.AppendLine(string.IsNullOrWhiteSpace(logEvent.Message)
+                    ? "```No Message Provided```"
+                    : logEvent.Message.Equals("{0}")
+                        ? "```Invalid Parameters Provided => {0}```"
+                        : $"```{logEvent.Message}```");
+                if (logEvent.Exception is not null)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("**Exception Message**");
+                    sb.AppendLine(string.IsNullOrWhiteSpace(logEvent.Exception.Message)
+                        ? "```No Exception Message Provided```"
+                        : $"```{logEvent.Exception.Message}```");
+                    sb.AppendLine();
+                    sb.AppendLine("**Exception Type**");
+                    sb.AppendLine($"```{logEvent.Exception.GetType()}```");
+                    sb.AppendLine();
+                    sb.AppendLine("**Exception Stack Trace**");
+                    sb.AppendLine(logEvent.Exception.StackTrace is null
+                        ? "```No Stack Trace Provided```"
+                        : $"```{logEvent.Exception.StackTrace}```");
+                    sb.AppendLine();
+                    sb.AppendLine("**Exception Inner Exception**");
+                    sb.AppendLine(logEvent.Exception.InnerException is null
+                        ? "```No Inner Exception Provided```"
+                        : $"```{logEvent.Exception.InnerException}```");
+                    sb.AppendLine();
+                    sb.AppendLine("**Exception Target Site**");
+                    sb.AppendLine($"```{logEvent.Exception.TargetSite}```");
+                }
 
                 sb.AppendLine(logHandler.CreateRolePingText());
                 sb.AppendLine(logHandler.CreateMemberPingText());
@@ -153,9 +177,9 @@ namespace S_Utilities.Utils
                     return;
                 }
 
-                using (_lock.AcquireSharedUsing())
+                using (Lock.AcquireSharedUsing())
                 {
-                    MessagesForDiscord[logHandler.DiscordWebHook] = new List<WebHookMessage>{webhookMessage};
+                    MessagesForDiscord[logHandler.DiscordWebHook] = new(){webhookMessage};
                 }
             }
         }

@@ -63,7 +63,7 @@ namespace S_Utilities
             config.LoggingRules.Add(rule);
             LogManager.Configuration = config;
             
-            SenXCustomTarget.CustomLogEventReceived += Log2Discord_Processor.ProcessLogEvent;
+            SenXCustomTarget.CustomLogEventReceived += Log2DiscordProcessor.ProcessLogEvent;
             Save();
         }
 
