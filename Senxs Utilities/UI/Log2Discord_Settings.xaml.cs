@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -86,6 +87,11 @@ namespace Senxs_Utilities.UI
 
         private void CreateTestLog_ButtonClick(object? sender, RoutedEventArgs? e)
         {
+            CreateTestLogs(includeLargeStackTrace: true);
+        }
+
+        private void CreateTestLogs(bool includeLargeStackTrace)
+        {
             Log.Info("Creating test log events:");
             Log.Debug("Test Debug Log");
             Log.Trace("Test Trace Log");
@@ -93,6 +99,13 @@ namespace Senxs_Utilities.UI
             Log.Warn("Test Warn Log");
             Log.Error("Test Error Log");
             Log.Fatal("Test Fatal Log");
+
+            if (!includeLargeStackTrace)
+                return;
+
+            string largeStackTrace = BuildLargeStackTrace();
+            var exception = new LongStackTraceException("Test Error Log With Large Stack Trace", largeStackTrace);
+            Log.Error(exception, "Test Error Log With Large Stack Trace");
         }
 
         private async void START_CreateTestLogSPAM_ButtonClick(object sender, RoutedEventArgs e)
@@ -101,7 +114,7 @@ namespace Senxs_Utilities.UI
             while (_spamlog)
             {
                 for (int x = 0; x < 50; x++)
-                    CreateTestLog_ButtonClick(null, null);
+                    CreateTestLogs(includeLargeStackTrace: false);
                 await Sleeper(5);
             }
         }
@@ -111,9 +124,35 @@ namespace Senxs_Utilities.UI
             _spamlog = false;
         }
 
+        private void SaveSettingsButtonClick(object sender, RoutedEventArgs e)
+        {
+            SaveConfig();
+        }
+
         private static async Task Sleeper(int seconds)
         {
             await Task.Delay(seconds * 1000);
+        }
+
+        private static string BuildLargeStackTrace()
+        {
+            const string line = "   at Senxs_Utilities.Tests.Log2Discord_Settings.CreateTestLog_ButtonClick() in C:\\FakePath\\Log2Discord_Settings.xaml.cs:line 123";
+            StringBuilder sb = new();
+            for (int i = 0; i < 200; i++)
+                sb.AppendLine(line);
+            return sb.ToString();
+        }
+
+        private sealed class LongStackTraceException : Exception
+        {
+            private readonly string _stackTrace;
+
+            public LongStackTraceException(string message, string stackTrace) : base(message)
+            {
+                _stackTrace = stackTrace;
+            }
+
+            public override string StackTrace => _stackTrace;
         }
     }
 }

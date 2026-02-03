@@ -1,10 +1,10 @@
-﻿using System;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using System.Timers;
-using Discord;
-using Discord.Webhook;
 using NLog;
 using S_Utilities.Settings;
 using VRage;
@@ -13,10 +13,33 @@ namespace S_Utilities.Utils
 {
     public static class Log2DiscordProcessor
     {
+        private const int DefaultMaxMessagesPerSecond = 3;
+        private const int DefaultStackTraceEmbedLimit = 4500;
+        private static readonly TimeSpan RateLimitWindow = TimeSpan.FromSeconds(1);
+
         private static S_Config? Config => Senxs_Utilities.Config;
-        private static readonly Dictionary<string,List<WebHookMessage>> MessagesForDiscord = new();
-        private static readonly Timer SendTimer = new(TimeSpan.FromSeconds(5).TotalMilliseconds);
+        private static int MaxMessagesPerSecond
+        {
+            get
+            {
+                int configured = Config?.Log2DiscordRateLimitPerSecond ?? DefaultMaxMessagesPerSecond;
+                return configured > 0 ? configured : DefaultMaxMessagesPerSecond;
+            }
+        }
+
+        private static int StackTraceEmbedLimit
+        {
+            get
+            {
+                int configured = Config?.Log2DiscordStackTraceEmbedLimit ?? DefaultStackTraceEmbedLimit;
+                return configured > 0 ? configured : DefaultStackTraceEmbedLimit;
+            }
+        }
+        private static readonly ConcurrentQueue<(WebHookMessage, StringBuilder)> MessagesForDiscord = new();
+        private static readonly Timer SendTimer = new(TimeSpan.FromSeconds(1).TotalMilliseconds);
         private static readonly FastResourceLock Lock = new();
+        private static readonly object RateLimitLock = new();
+        private static readonly Dictionary<string, RateLimitState> RateLimits = new(StringComparer.OrdinalIgnoreCase);
 
         static Log2DiscordProcessor()
         {
@@ -28,66 +51,84 @@ namespace S_Utilities.Utils
         {
             using (Lock.AcquireExclusiveUsing())
             {
-                List<string> keys = MessagesForDiscord.Keys.ToList();
-                if (!keys.Any()) return;
-            
-                foreach (string message in keys)
+                FlushRateLimitNotices();
+                while (!MessagesForDiscord.IsEmpty)
                 {
-                    using DiscordWebhookClient client = new (message);
-                    if (!MessagesForDiscord.TryGetValue(message, out List<WebHookMessage> messages)) continue;
-                
-                    if (messages.Count > 10)
-                    {
-                        EmbedBuilder embed = new ()
-                        {
-                            Description = "WARNING:  GENERATING TOO MANY LOGS TO POST!!!", Color = Color.DarkRed,
-                        };
+                    if (!MessagesForDiscord.TryDequeue(out (WebHookMessage, StringBuilder) msg))
+                        break;
 
-                        try
-                        {
-                            await client.SendMessageAsync(Senxs_Utilities.InstName, embeds: new[] { embed.Build() });
-                        }
-                        catch (Exception exception)
-                        {
-                            Senxs_Utilities.Log.Error(exception, exception.Message);
-                        }
-                        MessagesForDiscord.Remove(message);
-                        continue;
-                    }
-
-                    List<Embed> embeds = new();
-                    HashSet<ulong> allowedRoleId = new();
-                    HashSet<ulong> allowedMemberIds = new();
-                
-                    foreach (WebHookMessage hookMessage in messages)
-                    {
-                        embeds.AddRange(hookMessage.Embeds);
-
-                        foreach (ulong roleId in hookMessage.RoleIDs)
-                            allowedRoleId.Add(roleId);
-
-                        foreach (ulong userId in hookMessage.UserIDs)
-                            allowedMemberIds.Add(userId);
-                    }
-                
-                    AllowedMentions mentions = new()
-                    {
-                        RoleIds = allowedRoleId.ToList(), 
-                        UserIds = allowedMemberIds.ToList()
-                    };
-
-                    try
-                    {
-                        await client.SendMessageAsync(Senxs_Utilities.InstName, embeds: embeds, allowedMentions: mentions);
-                    }
-                    catch (Exception exception)
-                    {
-                        Senxs_Utilities.Log.Error(exception, exception.Message);
-                    }
-                    
-                    MessagesForDiscord.Remove(message);
+                    await SendSingleMessageAsync(msg.Item1, msg.Item2);
                 }
             }
+        }
+
+        private static async Task SendSingleMessageAsync(WebHookMessage webhookMessage, StringBuilder fileBuilder)
+        {
+            try
+            {
+                string webhookUrl = webhookMessage.DiscordWebHookUrl;
+                if (string.IsNullOrEmpty(webhookUrl))
+                {
+                    Senxs_Utilities.Log.Warn("No Discord webhook URL configured for this log handler.");
+                    return;
+                }
+
+                var allowedMentions = new AllowedMentions
+                {
+                    RoleIds = webhookMessage.RoleIDs,
+                    UserIds = webhookMessage.UserIDs
+                };
+
+                Stream? fileStream = null;
+                string? fileName = null;
+
+                // If fileBuilder has characters, create a file attachment
+                if (fileBuilder.Length > 0)
+                {
+                    var content = fileBuilder.ToString();
+                    var bytes = Encoding.UTF8.GetBytes(content);
+                    fileStream = new MemoryStream(bytes);
+                    fileName = "stacktrace.txt";
+                }
+
+                // Ensure embed is not null before sending
+                if (webhookMessage.Embed == null)
+                {
+                    Senxs_Utilities.Log.Warn("Webhook message embed is null, skipping.");
+                    return;
+                }
+
+                bool success = await DiscordWebHook.SendAsync(
+                    webhookUrl,
+                    username: Senxs_Utilities.InstName,
+                    embeds: new[] { webhookMessage.Embed },
+                    allowedMentions: allowedMentions,
+                    fileAttachment: fileStream,
+                    fileName: fileName
+                );
+
+                if (!success)
+                {
+                    Senxs_Utilities.Log.Warn("Failed to send log to Discord.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Senxs_Utilities.Log.Error(ex, "Error sending Discord webhook.");
+            }
+        }
+
+        private static int GetColorForLogLevel(string levelName)
+        {
+            return levelName switch
+            {
+                "Fatal" => 0x8B0000, // DarkRed
+                "Error" => 0xFF0000, // Red
+                "Warn"  => 0xFFD700, // Gold
+                "Info"  => 0x00FF00, // Green
+                "Debug" => 0xD3D3D3, // LightGrey
+                _       => 0x000000  // Default black
+            };
         }
 
         public static void ProcessLogEvent(LogEventInfo logEvent)
@@ -109,7 +150,33 @@ namespace S_Utilities.Utils
                 
                 if (logEvent.Level.Ordinal < logHandler.MinLogLevel || logEvent.Level.Ordinal > logHandler.MaxLogLevel)
                     continue;
-                
+
+                if (!IsTestLog(logEvent))
+                {
+                    bool allowMessage = TryConsumeRateLimitSlot(logHandler, out int droppedCount);
+                    if (droppedCount > 0)
+                        EnqueueRateLimitNotice(logHandler, droppedCount);
+                    if (!allowMessage)
+                        return;
+                }
+
+                string? rawStackTrace = logEvent.Exception?.StackTrace;
+                string stackTraceEmbedText;
+                StringBuilder stackTraceAttachment = new();
+                if (string.IsNullOrWhiteSpace(rawStackTrace))
+                {
+                    stackTraceEmbedText = "```No Stack Trace Provided```";
+                }
+                else if (rawStackTrace!.Length <= StackTraceEmbedLimit)
+                {
+                    stackTraceEmbedText = $"```{rawStackTrace}```";
+                }
+                else
+                {
+                    stackTraceEmbedText = "```Stack trace too long. See attached file.```";
+                    stackTraceAttachment.AppendLine(rawStackTrace);
+                }
+
                 StringBuilder sb = new ();
                 sb.AppendLine($"**{logEvent.Level.Name}**");
                 sb.AppendLine();
@@ -134,9 +201,7 @@ namespace S_Utilities.Utils
                     sb.AppendLine($"```{logEvent.Exception.GetType()}```");
                     sb.AppendLine();
                     sb.AppendLine("**Exception Stack Trace**");
-                    sb.AppendLine(logEvent.Exception.StackTrace is null
-                        ? "```No Stack Trace Provided```"
-                        : $"```{logEvent.Exception.StackTrace}```");
+                    sb.AppendLine(stackTraceEmbedText);
                     sb.AppendLine();
                     sb.AppendLine("**Exception Inner Exception**");
                     sb.AppendLine(logEvent.Exception.InnerException is null
@@ -149,47 +214,151 @@ namespace S_Utilities.Utils
 
                 sb.AppendLine(logHandler.CreateRolePingText());
                 sb.AppendLine(logHandler.CreateMemberPingText());
-
-                EmbedBuilder embed = new ()
+                
+                DiscordEmbed embed = new DiscordEmbed
                 {
-                    Description = sb.ToString(), Color = logEvent.Level.Name switch
-                    {
-                        "Fatal" => Color.DarkRed,
-                        "Error" => Color.Red,
-                        "Warn" => Color.Gold,
-                        "Info" => Color.Green,
-                        "Debug" => Color.LightGrey,
-                        _ => Color.Default
-                    }
+                    Description = sb.ToString(),
+                    Color = GetColorForLogLevel(logEvent.Level.Name)
                 };
 
                 WebHookMessage webhookMessage = new()
                 {
                     RoleIDs = logHandler.RolesToPing,
-                    UserIDs = logHandler.MembersToPing
+                    UserIDs = logHandler.MembersToPing,
+                    Embed = embed,
+                    DiscordWebHookUrl = logHandler.DiscordWebHook
                 };
-                
-                webhookMessage.Embeds.Add(embed.Build());
 
-                if (MessagesForDiscord.TryGetValue(logHandler.DiscordWebHook, out List<WebHookMessage>? list))
+                MessagesForDiscord.Enqueue((webhookMessage, stackTraceAttachment));
+                return;
+            }
+        }
+
+        private static bool TryConsumeRateLimitSlot(LogHandler logHandler, out int droppedCount)
+        {
+            droppedCount = 0;
+            if (string.IsNullOrWhiteSpace(logHandler.DiscordWebHook))
+                return false;
+
+            DateTime now = DateTime.UtcNow;
+            lock (RateLimitLock)
+            {
+                if (!RateLimits.TryGetValue(logHandler.DiscordWebHook, out RateLimitState? state))
                 {
-                    list.Add(webhookMessage);
-                    return;
+                    state = new(now);
+                    RateLimits.Add(logHandler.DiscordWebHook, state);
                 }
 
-                using (Lock.AcquireSharedUsing())
+                state.LastHandlerName = string.IsNullOrWhiteSpace(logHandler.Name) ? null : logHandler.Name;
+
+                if (now - state.WindowStartUtc >= RateLimitWindow)
                 {
-                    MessagesForDiscord[logHandler.DiscordWebHook] = new(){webhookMessage};
+                    if (state.DroppedInWindow > 0)
+                    {
+                        droppedCount = state.DroppedInWindow;
+                        state.DroppedInWindow = 0;
+                        state.SentInWindow = 1;
+                    }
+                    else
+                    {
+                        state.SentInWindow = 0;
+                    }
+
+                    state.WindowStartUtc = now;
+                }
+
+                if (state.SentInWindow >= MaxMessagesPerSecond)
+                {
+                    state.DroppedInWindow++;
+                    return false;
+                }
+
+                state.SentInWindow++;
+                return true;
+            }
+        }
+
+        private static bool IsTestLog(LogEventInfo logEvent)
+        {
+            return string.Equals(logEvent.LoggerName, "Test Logger", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void FlushRateLimitNotices()
+        {
+            DateTime now = DateTime.UtcNow;
+            List<(string WebhookUrl, string? HandlerName, int DroppedCount)> notices = new();
+
+            lock (RateLimitLock)
+            {
+                foreach (KeyValuePair<string, RateLimitState> entry in RateLimits)
+                {
+                    RateLimitState state = entry.Value;
+                    if (now - state.WindowStartUtc < RateLimitWindow)
+                        continue;
+
+                    if (state.DroppedInWindow > 0)
+                    {
+                        notices.Add((entry.Key, state.LastHandlerName, state.DroppedInWindow));
+                        state.DroppedInWindow = 0;
+                        state.SentInWindow = 1;
+                    }
+                    else
+                    {
+                        state.SentInWindow = 0;
+                    }
+
+                    state.WindowStartUtc = now;
                 }
             }
+
+            foreach ((string WebhookUrl, string? HandlerName, int DroppedCount) notice in notices)
+            {
+                MessagesForDiscord.Enqueue((BuildRateLimitNotice(notice.WebhookUrl, notice.HandlerName, notice.DroppedCount), new StringBuilder()));
+            }
+        }
+
+        private static void EnqueueRateLimitNotice(LogHandler logHandler, int droppedCount)
+        {
+            MessagesForDiscord.Enqueue((BuildRateLimitNotice(logHandler.DiscordWebHook, logHandler.Name, droppedCount), new StringBuilder()));
+        }
+
+        private static WebHookMessage BuildRateLimitNotice(string webhookUrl, string? handlerName, int droppedCount)
+        {
+            string handlerLabel = string.IsNullOrWhiteSpace(handlerName) ? "handler" : $"handler \"{handlerName}\"";
+            string message = $"Rate limit reached for {handlerLabel}. Dropped {droppedCount} log message{(droppedCount == 1 ? "" : "s")} in the last second.";
+
+            DiscordEmbed embed = new DiscordEmbed
+            {
+                Description = message,
+                Color = 0xFFA500 // Orange
+            };
+
+            return new WebHookMessage
+            {
+                DiscordWebHookUrl = webhookUrl,
+                Embed = embed
+            };
         }
     }
     
     public sealed class WebHookMessage
     {
-        public List<Embed> Embeds = new ();
+        public DiscordEmbed? Embed;
         public List<ulong> RoleIDs = new ();
         public List<ulong> UserIDs = new ();
+        public string DiscordWebHookUrl = "";
+    }
+
+    internal sealed class RateLimitState
+    {
+        public DateTime WindowStartUtc;
+        public int SentInWindow;
+        public int DroppedInWindow;
+        public string? LastHandlerName;
+
+        public RateLimitState(DateTime windowStartUtc)
+        {
+            WindowStartUtc = windowStartUtc;
+        }
     }
 }
-

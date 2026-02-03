@@ -26,8 +26,24 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
+
+        <GroupBox Header="Log2Discord Settings" Grid.Row="0" Grid.Column="0" Margin="3">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Rate limit (messages/sec):" Margin="3" VerticalAlignment="Center"/>
+                    <TextBox Width="60" Margin="3" VerticalAlignment="Center"
+                             Text="{Binding Log2DiscordRateLimitPerSecond, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Stack trace embed limit (chars):" Margin="3" VerticalAlignment="Center"/>
+                    <TextBox Width="80" Margin="3" VerticalAlignment="Center"
+                             Text="{Binding Log2DiscordStackTraceEmbedLimit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+                <Button Content="Save Settings" Margin="3" Width="120" Click="SaveSettingsButtonClick"/>
+            </StackPanel>
+        </GroupBox>
         
-        <GroupBox Name="CurrentLog2Discord" Header="Current Log2Discord Handlers" Grid.Row="0" Grid.Column="0">
+        <GroupBox Name="CurrentLog2Discord" Header="Current Log2Discord Handlers" Grid.Row="1" Grid.Column="0">
            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
